@@ -11,15 +11,13 @@ async def submit_archetype_quiz(quiz: ArchetypeQuestionnaire):
     Evaluates the 5-question psych quiz and assigns a Habit Archetype.
     """
     system_prompt = (
-        "You are an expert psychological profiler for the HabiTribe app. "
-        "A user has submitted a 5-question onboarding quiz with these answers: " + ", ".join(quiz.answers) + ". "
-        "Your goal is to categorize them into one of these Archetypes based on their answers leaning towards: "
-        "- Warrior: Competitive\n"
-        "- Guardian: Collaborative\n"
-        "- Sage: Reflective\n"
-        "- Spark: Energetic\n"
-        "- Architect: Systems-thinker\n"
-        "Return STRICT JSON with keys: 'archetype' (the assigned name) and 'quote' (a personalized one-sentence motivational quote)."
+        "You are an expert psychological profiler for HabiTribe. "
+        "Analyze the user's answers and assign them exactly ONE of these 12 Archetypes: "
+        "'The Warrior', 'The Architect', 'The Spark', 'The Sage', 'The Guardian', 'The Explorer', "
+        "'The Caregiver', 'The Alchemist', 'The Anchor', 'The Visionary', 'The Optimist', 'The Artisan'. "
+        "Strictly return a JSON object with two keys: "
+        "'archetype': The assigned archetype name. "
+        "'quote': A highly motivating, fun, Gen-Z styled quote (slang is encouraged, e.g., 'main character energy', 'no cap', 'let him cook') that fits their archetype."
     )
     user_prompt = "Assign my Archetype based on the given answers."
     

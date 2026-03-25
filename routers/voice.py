@@ -43,3 +43,16 @@ async def whisper_checkin(
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+@router.post("/transcribe")
+async def extract_transcript(audio_file: UploadFile = File(...)):
+    """Generic Whisper transcription endpoint for Voice Journaling and Restore flows."""
+    temp_file_path = f"temp_{audio_file.filename}"
+    with open(temp_file_path, "wb") as buffer:
+        shutil.copyfileobj(audio_file.file, buffer)
+    try:
+        text = await transcribe_audio(temp_file_path)
+        return {"text": text}
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)

@@ -1,0 +1,84 @@
+HabiTribe: 12 Psychological Habit Archetypes
+=============================================
+This framework maps every user into one of 12 unique personality schemas during onboarding. The AI engine uses these to personalize quotes, UI elements, and "Restore Flow" friction advice. 
+As users interact with the app, their archetype can dynamically evolve based on their behavior data.
+
+1. The Warrior (The Disciplined Finisher)
+   • Intent: Mastery through strict routine. They want to conquer challenges and see hard metrics.
+   • Habits Strategy: High-intensity goals, rigid streaks, loves "Hard" difficulty habits.
+   • Friction Advice Focus: "Don't burn out. Rest is part of the battle." 
+   • Icon: 🗡️ or 🔥
+
+2. The Architect (The Systems Builder)
+   • Intent: Optimization. They care less about the raw streak and more about the "perfect system."
+   • Habits Strategy: Multi-layered routines, habit-stacking, highly detailed notes.
+   • Friction Advice Focus: "Don't let perfect be the enemy of good. Do 1% today."
+   • Icon: 🏗️ or 📐
+
+3. The Spark (The Burst Performer)
+   • Intent: Quick wins. They get massive bursts of motivation but struggle with long-term consistency.
+   • Habits Strategy: Short, 7-day sprints instead of 100-day grinds. High variety.
+   • Friction Advice Focus: "Momentum is a wave. Learn to ride the small ripples when the big waves recede."
+   • Icon: ⚡ or 🎆
+
+4. The Sage (The Mindful Learner)
+   • Intent: Deep growth and understanding. They want habits that expand their mind or soul.
+   • Habits Strategy: Reading, meditation, journaling. Prefers quality of execution over daily streaks.
+   • Friction Advice Focus: "Patience. A mountain is built one grain of sand at a time."
+   • Icon: 🧘 or 👁️
+
+5. The Guardian (The Protector of Streaks)
+   • Intent: Consistency at all costs. They hate losing and are highly risk-averse to breaking the chain.
+   • Habits Strategy: Daily check-ins, utilizes the "Streak Freeze" frequently.
+   • Friction Advice Focus: "A skipped day does not erase a hundred days of progress."
+   • Icon: 🛡️ or 🤝
+
+6. The Explorer (The Novelty Seeker)
+   • Intent: Variety. They get bored doing the exact same thing every day.
+   • Habits Strategy: Rotating habits, trying completely new challenges every month.
+   • Friction Advice Focus: "Boredom is just the brain asking for a deeper level of focus."
+   • Icon: 🧭 or ⛵
+
+7. The Caregiver (The Community Anchor)
+   • Intent: Social accountability. They will show up for their Tribe even if they wouldn't show up for themselves.
+   • Habits Strategy: Highly active in Tribes, motivated by team goals and sharing progress.
+   • Friction Advice Focus: "You cannot pour from an empty cup. Take time for your own habits."
+   • Icon: 💚 or 🕊️
+
+8. The Alchemist (The Re-inventor)
+   • Intent: Radical transformation. Usually joining the app after a major life event or "rock bottom" moment.
+   • Habits Strategy: Drastic lifestyle changes, highly susceptible to the "Elastic Recovery" flow.
+   • Friction Advice Focus: "Real magic takes time. Trust the slow process of transmutation."
+   • Icon: 🧪 or 🔮
+
+9. The Anchor (The Unshakable Base)
+   • Intent: Stability and groundedness. They move at a slow, reliable, unemotional pace.
+   • Habits Strategy: Easy/Medium habits, immune to motivation drops, rarely uses the app socially.
+   • Friction Advice Focus: "You are the rock. But remember, even rocks can be polished to shine brighter."
+   • Icon: ⚓ or 🏔️
+
+10. The Visionary (The Big Picture Dreamer)
+    • Intent: Reaching the ultimate end-goal. They focus heavily on the destination, neglecting the daily steps.
+    • Habits Strategy: Vision boards, grand goals, needs constant reminders of "why" they are doing this.
+    • Friction Advice Focus: "The dream is alive, but the path is built today. Focus on the next step."
+    • Icon: 🔭 or 🌌
+
+11. The Optimist (The Resilient Bouncer)
+    • Intent: Positive momentum. They rarely feel bad about breaking a streak and happily just click "start over."
+    • Habits Strategy: Flexible, joyful habits. Highly responsive to positive reinforcement in the UI.
+    • Friction Advice Focus: "Your positivity is your superpower. Channel it into a 5-day streak this week."
+    • Icon: ☀️ or 🌻
+
+12. The Artisan (The Craft Purist)
+    • Intent: Quality and beauty over quantity. They skip days if they can't do the habit perfectly.
+    • Habits Strategy: Long sessions (e.g., 2 hours of guitar) instead of 10 minutes every day.
+    • Friction Advice Focus: "A messy sketch is better than a blank canvas. Put something down today."
+    • Icon: 🎨 or ⚒️
+
+---
+HOW TO USE IN ONBOARDING QUIZ:
+Q1: "When you miss a habit, how do you feel?" -> Maps to Optimist / Guardian
+Q2: "What motivates you most?" -> Maps to Caregiver / Architect / Warrior
+Q3: "How do you prefer your timeline?" -> Maps to Spark / Sage / Anchor
+Q4: "What's your primary goal?" -> Maps to Visionary / Explorer / Alchemist
+Q5: "How does your routine look?" -> Maps to Artisan / Architect / Warrior
