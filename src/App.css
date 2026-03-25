@@ -1,0 +1,119 @@
+:root {
+  --bg: #0E0F13;
+  --bg2: #16181F;
+  --bg3: #1E2029;
+  --border: rgba(255, 255, 255, 0.07);
+  --amber: #F5A623;
+  --t1: #FFFFFF;
+  --t2: rgba(255, 255, 255, 0.6);
+  --t3: rgba(255, 255, 255, 0.35);
+  --r-xl: 28px;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Instrument Sans', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #000;
+  color: var(--t1);
+  font-family: var(--font-body);
+}
+
+#device {
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.status-bar {
+  height: 44px;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.screens {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  padding-bottom: 80px;
+}
+
+.bottom-nav {
+  height: 78px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: var(--t3);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.bottom-nav button.active {
+  color: var(--amber);
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--r-md);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary {
+  background: var(--amber);
+  color: #000;
+}
+
+.btn-secondary {
+  background: var(--bg3);
+  color: var(--t1);
+  border: 1px solid var(--border);
+}
+
+.inp {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  color: #fff;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  margin-bottom: 16px;
+}
