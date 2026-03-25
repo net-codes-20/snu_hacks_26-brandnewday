@@ -17,6 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to HabiTribe AI Service! The backend is successfully deployed and running. Append /docs to the URL to view the interactive API playground."}
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "HabiTribe AI Service is running!"}
