@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useHabits } from '../../context/HabitContext';
-import { Plus, Camera, Check, Trophy, Snowflake } from 'lucide-react';
+import { Plus, Camera, Check, Snowflake } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { habits, user, toggleHabit, addHabit, useStreakFreeze } = useHabits();
@@ -28,6 +28,17 @@ const Dashboard: React.FC = () => {
   const doneCount = habits.filter(h => h.doneToday).length;
   const totalCount = habits.length;
   const pct = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+  
+  const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+  const levels = [
+    { id: 1, req: 0 },
+    { id: 2, req: 3 },
+    { id: 3, req: 7 },
+    { id: 4, req: 14 },
+    { id: 5, req: 30 }
+  ];
+  const currentLevel = levels.slice().reverse().find(l => maxStreak >= l.req)?.id || 1;
+  const nextLevel = levels.find(l => l.id === currentLevel + 1);
 
   return (
     <div className="dashboard-screen" style={{ padding: '24px' }}>
@@ -63,7 +74,7 @@ const Dashboard: React.FC = () => {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px', animation: 'bounce 0.5s infinite alternate' }}>🎉</div>
             <h2 style={{ color: 'var(--amber)', textShadow: '0 0 20px rgba(245, 166, 35, 0.5)' }}>WELL DONE!</h2>
-            <p>Task completed & Tribe health boosted!</p>
+            <p style={{ color: '#fff' }}>Task completed & Tribe health boosted!</p>
           </div>
           {/* Simple CSS particles can be added here */}
           {[...Array(20)].map((_, i) => (
@@ -95,10 +106,49 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #1A1D26, #13151B)' }}>
+      <div className="card" style={{ overflowX: 'auto', padding: '16px' }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Your Journey 🗺️</h3>
+        <div style={{ display: 'flex', alignItems: 'center', width: 'max-content', paddingBottom: '8px' }}>
+          {levels.map((l, index) => {
+            const unlocked = maxStreak >= l.req;
+            const isCurrent = currentLevel === l.id;
+            return (
+              <React.Fragment key={l.id}>
+                <div style={{ 
+                  width: '56px', height: '56px', borderRadius: '50%', 
+                  background: unlocked ? 'var(--amber)' : 'var(--bg3)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  border: isCurrent ? '3px solid #FF6B6B' : 'none',
+                  opacity: unlocked ? 1 : 0.5,
+                  boxShadow: isCurrent ? '0 4px 10px rgba(255,107,107,0.3)' : 'none',
+                  flexShrink: 0
+                }}>
+                  <span style={{ fontSize: '20px' }}>{unlocked ? (l.id === levels.length ? '👑' : '⭐') : '🔒'}</span>
+                  <span style={{ fontSize: '10px', color: unlocked ? '#fff' : 'var(--t2)', fontWeight: 'bold' }}>Lvl {l.id}</span>
+                </div>
+                {index < levels.length - 1 && (
+                  <div style={{ 
+                    width: '32px', height: '4px', 
+                    background: maxStreak >= levels[index+1].req ? 'var(--amber)' : 'var(--bg3)',
+                    borderRadius: '2px',
+                    flexShrink: 0
+                  }} />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--t2)', marginTop: '12px', textAlign: 'center' }}>
+          {nextLevel 
+            ? `Get a ${nextLevel.req} day streak to unlock Level ${nextLevel.id}!` 
+            : 'You have reached the max level!'}
+        </div>
+      </div>
+
+      <div className="card" style={{ textAlign: 'center', background: 'linear-gradient(135deg, #FFFFFF, #F4F7FE)' }}>
         <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 16px' }}>
           <svg width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="8" />
             <circle cx="60" cy="60" r="50" fill="none" stroke="var(--amber)" strokeWidth="8" 
               strokeDasharray="314" strokeDashoffset={314 - (314 * pct / 100)} 
               strokeLinecap="round" transform="rotate(-90 60 60)" 
@@ -130,7 +180,7 @@ const Dashboard: React.FC = () => {
                   width: '32px', height: '32px', borderRadius: '50%', 
                   border: '2px solid var(--amber)', 
                   background: h.doneToday ? 'var(--amber)' : 'none',
-                  color: h.doneToday ? '#000' : 'var(--amber)',
+                  color: h.doneToday ? '#fff' : 'var(--amber)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer'
                 }}

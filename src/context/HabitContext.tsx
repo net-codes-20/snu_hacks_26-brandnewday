@@ -57,7 +57,6 @@ interface HabitContextType {
   user: User | null;
   tribes: Tribe[];
   invitations: Invitation[];
-  setUser: (user: User) => void;
   addHabit: (habit: Omit<Habit, 'id' | 'streak' | 'health' | 'doneToday' | 'completionLogs'>) => void;
   toggleHabit: (id: string, note?: string, image?: string) => void;
   completeOnboarding: (userData: Omit<User, 'streakFreezeCount' | 'freezeActiveToday'>) => void;
@@ -71,21 +70,18 @@ interface HabitContextType {
 
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
 
-export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const HabitProvider: React.FC<{ children: React.ReactNode, user: User | null }> = ({ children, user }) => {
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [user, setUserState] = useState<User | null>(null);
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (excluding user)
   useEffect(() => {
     const savedHabits = localStorage.getItem('habits');
-    const savedUser = localStorage.getItem('user');
     const savedTribes = localStorage.getItem('tribes');
     const savedInvitations = localStorage.getItem('invitations');
     
     if (savedHabits) setHabits(JSON.parse(savedHabits));
-    if (savedUser) setUserState(JSON.parse(savedUser));
     if (savedTribes) setTribes(JSON.parse(savedTribes));
     if (savedInvitations) setInvitations(JSON.parse(savedInvitations));
   }, []);
@@ -93,10 +89,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem('habits', JSON.stringify(habits));
-    if (user) localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('tribes', JSON.stringify(tribes));
     localStorage.setItem('invitations', JSON.stringify(invitations));
-  }, [habits, user, tribes, invitations]);
+  }, [habits, tribes, invitations]);
 
   const addHabit = (habitData: any) => {
     const newHabit: Habit = {
@@ -111,13 +106,10 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const toggleHabit = (id: string, note?: string, image?: string) => {
-    let completedNow = false;
     setHabits(prev => prev.map(h => {
       if (h.id === id) {
         const isDone = !h.doneToday;
-        completedNow = isDone;
         const newHealth = isDone ? Math.min(100, h.health + 10) : Math.max(0, h.health - 10);
-        // If freeze is active, don't decrease streak when untoggling
         const newStreak = isDone ? h.streak + 1 : (user?.freezeActiveToday ? h.streak : Math.max(0, h.streak - 1));
         
         const logs = [...h.completionLogs];
@@ -129,32 +121,11 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return h;
     }));
-
-    // Update Tribe Progress
-    if (completedNow && user?.joinedTribeId) {
-      setTribes(prev => prev.map(t => {
-        if (t.id === user.joinedTribeId) {
-          const newProgress = t.goalProgress + 1;
-          const rewarded = newProgress >= t.goalTarget && t.goalProgress < t.goalTarget;
-          
-          if (rewarded && user) {
-            setUserState({ ...user, streakFreezeCount: user.streakFreezeCount + 1 });
-          }
-
-          return { 
-            ...t, 
-            goalProgress: newProgress,
-            teamHealth: Math.min(100, t.teamHealth + 2),
-            members: t.members.map(m => m.alias === user.alias ? { ...m, completedToday: true, streak: m.streak + 1 } : m)
-          };
-        }
-        return t;
-      }));
-    }
   };
 
   const completeOnboarding = (userData: Omit<User, 'streakFreezeCount' | 'freezeActiveToday'>) => {
-    setUserState({ ...userData, streakFreezeCount: 0, freezeActiveToday: false });
+    // In a real app, this would use Supabase auth.updateUser() to set metadata.
+    console.log("Onboarding completed for:", userData);
   };
 
   const createTribe = (name: string, type: 'public' | 'private') => {
@@ -171,7 +142,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       teamHealth: 100
     };
     setTribes([...tribes, newTribe]);
-    setUserState({ ...user, joinedTribeId: newTribe.id });
   };
 
   const joinTribe = (tribeId: string) => {
@@ -186,10 +156,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return t;
     }));
-    setUserState({ ...user, joinedTribeId: tribeId });
   };
 
-  const sendInvitation = (tribeId: string, toAlias: string) => {
+  const sendInvitation = (tribeId: string, _toAlias: string) => {
     const tribe = tribes.find(t => t.id === tribeId);
     if (!tribe || !user) return;
     const newInv: Invitation = {
@@ -219,15 +188,14 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const useStreakFreeze = () => {
-    if (user && user.streakFreezeCount > 0 && !user.freezeActiveToday) {
-      setUserState({ ...user, streakFreezeCount: user.streakFreezeCount - 1, freezeActiveToday: true });
-    }
+    // Note: In a real app, this would update the user profile in Supabase/DB
+    console.log("Streak freeze used");
   };
 
   return (
     <HabitContext.Provider value={{ 
       habits, user, tribes, invitations, 
-      setUser: setUserState, addHabit, toggleHabit, completeOnboarding,
+      addHabit, toggleHabit, completeOnboarding,
       createTribe, joinTribe, sendInvitation, acceptInvitation, setTeamGoal, useStreakFreeze
     }}>
       {children}

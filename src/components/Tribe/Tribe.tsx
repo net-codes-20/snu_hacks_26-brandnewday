@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useHabits } from '../../context/HabitContext';
-import { Users, Lock, Globe, Plus, Send, CheckCircle, Flame, Heart } from 'lucide-react';
+import { Users, Lock, Globe, Plus, Send, CheckCircle, Flame, Heart, Trophy } from 'lucide-react';
 
 const Tribe: React.FC = () => {
   const { user, tribes, invitations, createTribe, acceptInvitation, setTeamGoal, sendInvitation } = useHabits();
@@ -35,6 +35,28 @@ const Tribe: React.FC = () => {
       alert(`Invitation sent to ${inviteAlias}! (Simulated)`);
     }
   };
+
+  const Leaderboard = () => (
+    <div className="card" style={{ marginTop: '24px' }}>
+      <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Trophy size={20} color="var(--amber)" /> Global Leaderboard
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {tribes.filter(t => t.type === 'public').sort((a, b) => b.teamStreak - a.teamStreak).slice(0, 5).map((t, index) => (
+          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: index < Math.min(4, tribes.filter(tr => tr.type === 'public').length - 1) ? '1px solid var(--border)' : 'none' }}>
+            <div style={{ fontWeight: 'bold', width: '24px', color: index === 0 ? '#F5A623' : index === 1 ? '#D0D0D0' : index === 2 ? '#CD7F32' : 'var(--t2)', fontSize: '16px' }}>
+              #{index + 1}
+            </div>
+            <div style={{ flex: 1, fontWeight: 'bold' }}>{t.name}</div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--amber)' }}>{t.teamStreak} pts</div>
+          </div>
+        ))}
+        {tribes.filter(t => t.type === 'public').length === 0 && (
+          <div style={{ fontSize: '12px', color: 'var(--t2)' }}>No public tribes yet. Be the first!</div>
+        )}
+      </div>
+    </div>
+  );
 
   if (!user?.joinedTribeId) {
     return (
@@ -80,6 +102,8 @@ const Tribe: React.FC = () => {
             </div>
           ))}
         </div>
+        
+        <Leaderboard />
 
         {showCreate && (
           <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
@@ -113,6 +137,10 @@ const Tribe: React.FC = () => {
     );
   }
 
+  if (!currentTribe) {
+    return <div className="tribe-screen" style={{ padding: '24px' }}>Loading tribe data...</div>;
+  }
+
   const progressPct = Math.min(100, (currentTribe.goalProgress / currentTribe.goalTarget) * 100);
 
   return (
@@ -144,14 +172,14 @@ const Tribe: React.FC = () => {
 
       <div className="card" style={{ background: 'linear-gradient(135deg, #1A1D26, #13151B)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h4 style={{ margin: 0 }}>Weekly Goal</h4>
+          <h4 style={{ margin: 0, color: '#fff' }}>Weekly Goal</h4>
           <button onClick={() => setShowGoalModal(true)} style={{ background: 'none', border: 'none', color: 'var(--amber)', fontSize: '12px', cursor: 'pointer' }}>Edit</button>
         </div>
-        <p style={{ fontSize: '14px', marginBottom: '12px' }}>{currentTribe.teamGoal}</p>
+        <p style={{ fontSize: '14px', marginBottom: '12px', color: '#fff' }}>{currentTribe.teamGoal}</p>
         <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
           <div style={{ width: `${progressPct}%`, height: '100%', background: 'linear-gradient(90deg, #5BC4F5, #9B8EFF)', transition: 'width 0.5s ease' }}></div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--t2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
           <span>{currentTribe.goalProgress} / {currentTribe.goalTarget} tasks</span>
           <span>{Math.round(progressPct)}%</span>
         </div>
@@ -174,9 +202,9 @@ const Tribe: React.FC = () => {
         )}
       </div>
 
-      <div className="member-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="member-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
         {currentTribe.members.map((m) => (
-          <div key={m.id} className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div key={m.id} className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 0 }}>
             <div style={{ fontSize: '24px' }}>{m.icon}</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 'bold' }}>{m.alias} {m.alias === user.alias && '(You)'}</div>
@@ -192,6 +220,8 @@ const Tribe: React.FC = () => {
           </div>
         ))}
       </div>
+      
+      <Leaderboard />
 
       {showGoalModal && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>

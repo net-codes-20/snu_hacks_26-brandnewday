@@ -12,8 +12,8 @@ const Garden: React.FC = () => {
 
       <div className="garden-grid" style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(3, 1fr)', 
-        gap: '12px' 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+        gap: '20px' 
       }}>
         {habits.map((h, i) => (
           <motion.div 
