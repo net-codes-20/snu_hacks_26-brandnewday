@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useHabits } from '../../context/HabitContext';
-import { Plus, Camera, Check, Trophy, Snowflake } from 'lucide-react';
+import { Plus, Camera, Check, Snowflake, Share2 } from 'lucide-react';
+import MeTimePopup from './MeTimePopup';
+import ShareWrapped from '../Share/ShareWrapped';
 
 const Dashboard: React.FC = () => {
   const { habits, user, toggleHabit, addHabit, useStreakFreeze } = useHabits();
@@ -9,6 +11,15 @@ const Dashboard: React.FC = () => {
   const [activeHabitForCompletion, setActiveHabitForCompletion] = useState<string | null>(null);
   const [completionNote, setCompletionNote] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showMeTime, setShowMeTime] = useState(false);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('me_time_shown')) {
+      const timer = setTimeout(() => setShowMeTime(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  const [showShare, setShowShare] = useState(false);
 
   const handleAdd = () => {
     if (!newHabit.name) return;
@@ -34,7 +45,12 @@ const Dashboard: React.FC = () => {
       <header style={{ marginBottom: '24px' }}>
         <p style={{ color: 'var(--t2)', fontSize: '13px', margin: 0 }}>Good morning, {user?.realName} ☀️</p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '28px', margin: 0 }}>My Progress</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h1 style={{ fontSize: '28px', margin: 0 }}>My Progress</h1>
+            <button onClick={() => setShowShare(true)} style={{ background: 'none', border: 'none', color: 'var(--amber)', cursor: 'pointer', display: 'flex', marginTop: '6px' }}>
+              <Share2 size={20} />
+            </button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {user?.streakFreezeCount !== undefined && user.streakFreezeCount > 0 && !user.freezeActiveToday && (
               <button 
@@ -200,6 +216,21 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {showShare && (
+        <ShareWrapped 
+          type="personal"
+          onClose={() => setShowShare(false)}
+          data={{
+            name: "Crushed It!",
+            score: doneCount,
+            subtitle: "Habits Done",
+            details: `I completed ${doneCount} out of ${totalCount} habits today! 🔥`
+          }}
+        />
+      )}
+
+      {showMeTime && <MeTimePopup onClose={() => setShowMeTime(false)} />}
     </div>
   );
 };

@@ -22,6 +22,7 @@ export interface User {
   personalityIcon?: string;
   streakFreezeCount: number;
   joinedTribeId?: string;
+  joinedTribeIds?: string[];
   freezeActiveToday?: boolean;
 }
 
@@ -65,6 +66,7 @@ interface HabitContextType {
   joinTribe: (tribeId: string) => void;
   sendInvitation: (tribeId: string, toAlias: string) => void;
   acceptInvitation: (invitationId: string) => void;
+  rejectInvitation: (invitationId: string) => void;
   setTeamGoal: (tribeId: string, goal: string, target: number) => void;
   useStreakFreeze: () => void;
 }
@@ -77,17 +79,30 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [tribes, setTribes] = useState<Tribe[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount or inject seed data
   useEffect(() => {
     const savedHabits = localStorage.getItem('habits');
     const savedUser = localStorage.getItem('user');
     const savedTribes = localStorage.getItem('tribes');
     const savedInvitations = localStorage.getItem('invitations');
+    const seedVersion = localStorage.getItem('seed_v2');
     
-    if (savedHabits) setHabits(JSON.parse(savedHabits));
-    if (savedUser) setUserState(JSON.parse(savedUser));
-    if (savedTribes) setTribes(JSON.parse(savedTribes));
-    if (savedInvitations) setInvitations(JSON.parse(savedInvitations));
+    if (!savedUser || seedVersion !== 'true') {
+      const SEED_USER: User = { realName: "DevHero", alias: "code_ninja", age: 22, gender: "Non-binary", personalityType: "Architect", personalityIcon: "💻", streakFreezeCount: 2, joinedTribeIds: ["seed_tribe"] };
+      const SEED_TRIBES: Tribe[] = [{ id: "seed_tribe", name: "Hackathon Hustlers", type: 'public', members: [ { id: "m1", alias: "code_ninja", icon: "💻", streak: 42, completedToday: true }, { id: "m2", alias: "sleep_deprived", icon: "☕", streak: 12, completedToday: false } ], teamGoal: "Ship snu_hacks_26", goalProgress: 5, goalTarget: 10, teamStreak: 12, teamHealth: 95 }];
+      const SEED_HABITS: Habit[] = [ { id: "h1", name: "1 commit every day", description: "Push code to GitHub", flower: "💻", frequency: 'daily', difficulty: 'hard', streak: 42, health: 100, doneToday: true, completionLogs: [] }, { id: "h2", name: "Drink Water", description: "2L daily", flower: "💧", frequency: 'daily', difficulty: 'easy', streak: 15, health: 80, doneToday: false, completionLogs: [] } ];
+      
+      setUserState(SEED_USER);
+      setTribes(SEED_TRIBES);
+      setHabits(SEED_HABITS);
+      setInvitations([]);
+      localStorage.setItem('seed_v2', 'true');
+    } else {
+      if (savedHabits) setHabits(JSON.parse(savedHabits));
+      if (savedUser) setUserState(JSON.parse(savedUser));
+      if (savedTribes) setTribes(JSON.parse(savedTribes));
+      if (savedInvitations) setInvitations(JSON.parse(savedInvitations));
+    }
   }, []);
 
   // Save to localStorage
@@ -131,25 +146,28 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
 
     // Update Tribe Progress
-    if (completedNow && user?.joinedTribeId) {
-      setTribes(prev => prev.map(t => {
-        if (t.id === user.joinedTribeId) {
-          const newProgress = t.goalProgress + 1;
-          const rewarded = newProgress >= t.goalTarget && t.goalProgress < t.goalTarget;
-          
-          if (rewarded && user) {
-            setUserState({ ...user, streakFreezeCount: user.streakFreezeCount + 1 });
-          }
+    if (completedNow && user) {
+      const activeTribeIds = user.joinedTribeIds?.length ? user.joinedTribeIds : (user.joinedTribeId ? [user.joinedTribeId] : []);
+      if (activeTribeIds.length > 0) {
+        setTribes(prev => prev.map(t => {
+          if (activeTribeIds.includes(t.id)) {
+            const newProgress = t.goalProgress + 1;
+            const rewarded = newProgress >= t.goalTarget && t.goalProgress < t.goalTarget;
+            
+            if (rewarded) {
+              setUserState(curr => curr ? { ...curr, streakFreezeCount: curr.streakFreezeCount + 1 } : curr);
+            }
 
-          return { 
-            ...t, 
-            goalProgress: newProgress,
-            teamHealth: Math.min(100, t.teamHealth + 2),
-            members: t.members.map(m => m.alias === user.alias ? { ...m, completedToday: true, streak: m.streak + 1 } : m)
-          };
-        }
-        return t;
-      }));
+            return { 
+              ...t, 
+              goalProgress: newProgress,
+              teamHealth: Math.min(100, t.teamHealth + 2),
+              members: t.members.map(m => m.alias === user.alias ? { ...m, completedToday: true, streak: m.streak + 1 } : m)
+            };
+          }
+          return t;
+        }));
+      }
     }
   };
 
@@ -171,7 +189,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       teamHealth: 100
     };
     setTribes([...tribes, newTribe]);
-    setUserState({ ...user, joinedTribeId: newTribe.id });
+    const currentTribeIds = user.joinedTribeIds || (user.joinedTribeId ? [user.joinedTribeId] : []);
+    setUserState({ ...user, joinedTribeIds: [...currentTribeIds, newTribe.id] });
   };
 
   const joinTribe = (tribeId: string) => {
@@ -186,7 +205,10 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return t;
     }));
-    setUserState({ ...user, joinedTribeId: tribeId });
+    const currentTribeIds = user.joinedTribeIds || (user.joinedTribeId ? [user.joinedTribeId] : []);
+    if (!currentTribeIds.includes(tribeId)) {
+      setUserState({ ...user, joinedTribeIds: [...currentTribeIds, tribeId] });
+    }
   };
 
   const sendInvitation = (tribeId: string, toAlias: string) => {
@@ -209,6 +231,10 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setInvitations(invitations.filter(i => i.id !== invitationId));
   };
 
+  const rejectInvitation = (invitationId: string) => {
+    setInvitations(invitations.filter(i => i.id !== invitationId));
+  };
+
   const setTeamGoal = (tribeId: string, goal: string, target: number) => {
     setTribes(prev => prev.map(t => {
       if (t.id === tribeId) {
@@ -228,7 +254,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <HabitContext.Provider value={{ 
       habits, user, tribes, invitations, 
       setUser: setUserState, addHabit, toggleHabit, completeOnboarding,
-      createTribe, joinTribe, sendInvitation, acceptInvitation, setTeamGoal, useStreakFreeze
+      createTribe, joinTribe, sendInvitation, acceptInvitation, rejectInvitation, setTeamGoal, useStreakFreeze
     }}>
       {children}
     </HabitContext.Provider>

@@ -1,8 +1,11 @@
 import React from 'react';
 import { useHabits } from '../../context/HabitContext';
+import { Share2 } from 'lucide-react';
+import ShareWrapped from '../Share/ShareWrapped';
 
 const Profile: React.FC = () => {
   const { user, habits } = useHabits();
+  const [showShare, setShowShare] = React.useState(false);
 
   // Simple analytics
   const totalStreaks = habits.reduce((acc, h) => acc + h.streak, 0);
@@ -10,7 +13,10 @@ const Profile: React.FC = () => {
 
   return (
     <div className="profile-screen" style={{ padding: '24px' }}>
-      <header style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <header style={{ textAlign: 'center', marginBottom: '32px', position: 'relative' }}>
+        <button onClick={() => setShowShare(true)} style={{ position: 'absolute', right: '0', top: '0', background: 'none', border: 'none', color: 'var(--amber)', cursor: 'pointer', padding: '8px' }} title="Share Profile Progress">
+          <Share2 size={24} />
+        </button>
         <div style={{ fontSize: '64px', marginBottom: '16px' }}>{user?.personalityIcon}</div>
         <h2 style={{ fontSize: '24px', margin: '0 0 4px 0' }}>{user?.realName}</h2>
         <p style={{ color: 'var(--t2)', margin: 0 }}>The <strong>{user?.personalityType}</strong></p>
@@ -54,12 +60,25 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      <button className="btn btn-secondary" style={{ marginTop: '24px', color: '#FF6B8A' }} onClick={() => {
+      <button className="btn btn-secondary" style={{ marginTop: '24px', color: '#FF6B8A', width: '100%' }} onClick={() => {
         localStorage.clear();
         window.location.reload();
       }}>
         Log Out
       </button>
+
+      {showShare && (
+        <ShareWrapped 
+          type="personal"
+          onClose={() => setShowShare(false)}
+          data={{
+            name: `${user?.realName}'s Stats`,
+            score: totalStreaks,
+            subtitle: "Total Streak",
+            details: `I've maintained a total streak of ${totalStreaks} days with an average health of ${avgHealth}%! 🌟`
+          }}
+        />
+      )}
     </div>
   );
 };

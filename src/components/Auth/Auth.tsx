@@ -25,7 +25,7 @@ const Auth: React.FC<AuthProps> = ({ onComplete }) => {
     <div className="auth-screen" style={{ padding: '40px 24px' }}>
       <div className="auth-hero" style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{ fontSize: '64px' }}>🐝</div>
-        <h1 style={{ fontFamily: 'var(--font-head)', fontSize: '32px' }}>HabitTribe</h1>
+        <h1 style={{ fontFamily: 'var(--font-head)', fontSize: '32px' }}>HabitBee</h1>
         <p style={{ color: 'var(--t2)' }}>Grow habits. Bloom together.</p>
       </div>
 
