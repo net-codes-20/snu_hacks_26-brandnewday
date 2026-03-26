@@ -70,4 +70,44 @@ export const authService = {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
     return subscription;
   },
+
+  // 🔐 UPDATE PROFILE
+  async updateUserProfile(metadata: Record<string, any>): Promise<{ error: AuthError | null }> {
+    // 1. Update Auth Metadata (for session/JWT)
+    const { error: authError } = await supabase.auth.updateUser({
+      data: metadata
+    });
+    if (authError) return { error: authError };
+
+    // 2. Update Profiles Table
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          real_name: metadata.realName,
+          alias: metadata.displayName,
+          age: metadata.age,
+          gender: metadata.gender,
+          personality_type: metadata.personalityType,
+          personality_icon: metadata.personalityIcon,
+          vacation_mode: metadata.vacationMode,
+          vacation_reason: metadata.vacationReason,
+          total_points: metadata.totalPoints,
+        });
+      if (dbError) console.error("Database error:", dbError);
+    }
+
+    return { error: null };
+  },
+
+  // 🔐 GET PROFILE DATA
+  async getProfile(userId: string) {
+    return await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+  }
 };

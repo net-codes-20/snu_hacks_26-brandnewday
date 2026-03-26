@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useHabits } from '../../context/HabitContext';
 import { authService } from '../../services/authService';
-import { Award, Palmtree } from 'lucide-react';
+import { Award, Palmtree, LogOut } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { user, habits } = useHabits();
-  const [vacationMode, setVacationMode] = useState(false);
+  const { user, habits, toggleVacationMode } = useHabits();
   const [showVacationModal, setShowVacationModal] = useState(false);
-  const [vacationReason, setVacationReason] = useState('');
+  const [vacationReason, setVacationReason] = useState(user?.vacationReason || '');
 
   // Simple analytics
-  const totalStreaks = habits.reduce((acc, h) => acc + h.streak, 0);
-  const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+  const totalStreaks = habits.reduce((acc, h) => acc + h.current_streak, 0);
+  const maxStreak = habits.length > 0 ? Math.max(...habits.map(h => h.current_streak)) : 0;
   const avgHealth = habits.length === 0 ? 0 : Math.round(habits.reduce((acc, h) => acc + h.health, 0) / habits.length);
 
   const badges = [
@@ -21,25 +20,27 @@ const Profile: React.FC = () => {
   ];
 
   const handleLogout = async () => {
-    const { error } = await authService.signOut();
-    if (error) {
-      alert(error.message);
-    } else {
+    try {
+      await authService.signOut();
       localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    } catch (error: any) {
+      alert("Error signing out: " + error.message);
     }
   };
 
   const handleToggleVacation = () => {
-    if (vacationMode) {
-      setVacationMode(false);
+    if (user?.vacationMode) {
+      toggleVacationMode(false);
     } else {
       setShowVacationModal(true);
     }
   };
 
-  const handleConfirmVacation = () => {
+  const handleConfirmVacation = async () => {
     if (!vacationReason) return;
-    setVacationMode(true);
+    await toggleVacationMode(true, vacationReason);
     setShowVacationModal(false);
   };
 
@@ -49,6 +50,7 @@ const Profile: React.FC = () => {
         <div style={{ fontSize: '64px', marginBottom: '16px' }}>{user?.personalityIcon}</div>
         <h2 style={{ fontSize: '24px', margin: '0 0 4px 0' }}>{user?.realName}</h2>
         <p style={{ color: 'var(--t2)', margin: 0 }}>The <strong>{user?.personalityType}</strong></p>
+        <p style={{ fontSize: '14px', color: 'var(--amber)', fontWeight: 'bold', marginTop: '8px' }}>{user?.totalPoints} Points</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
@@ -64,18 +66,18 @@ const Profile: React.FC = () => {
 
       <div className="card" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: vacationMode ? 'rgba(91, 196, 245, 0.2)' : 'var(--bg3)', padding: '8px', borderRadius: '8px', color: vacationMode ? '#5BC4F5' : 'var(--t2)' }}>
+          <div style={{ background: user?.vacationMode ? 'rgba(91, 196, 245, 0.2)' : 'var(--bg3)', padding: '8px', borderRadius: '8px', color: user?.vacationMode ? '#5BC4F5' : 'var(--t2)' }}>
             <Palmtree size={20} />
           </div>
           <div>
             <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Vacation Mode</div>
-            <div style={{ fontSize: '12px', color: 'var(--t2)' }}>{vacationMode ? `Active: ${vacationReason}` : 'Pause streaks temporarily'}</div>
+            <div style={{ fontSize: '12px', color: 'var(--t2)' }}>{user?.vacationMode ? `Active: ${user.vacationReason}` : 'Pause streaks temporarily'}</div>
           </div>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-          <input type="checkbox" checked={vacationMode} onChange={handleToggleVacation} style={{ display: 'none' }} />
-          <div style={{ width: '40px', height: '24px', background: vacationMode ? 'var(--amber)' : 'var(--bg3)', borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
-            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: vacationMode ? '18px' : '2px', transition: 'left 0.3s' }} />
+          <input type="checkbox" checked={user?.vacationMode || false} onChange={handleToggleVacation} style={{ display: 'none' }} />
+          <div style={{ width: '40px', height: '24px', background: user?.vacationMode ? 'var(--amber)' : 'var(--bg3)', borderRadius: '12px', position: 'relative', transition: 'background 0.3s' }}>
+            <div style={{ width: '20px', height: '20px', background: '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: user?.vacationMode ? '18px' : '2px', transition: 'left 0.3s' }} />
           </div>
         </label>
       </div>
@@ -101,35 +103,25 @@ const Profile: React.FC = () => {
         <div className="card" style={{ background: 'linear-gradient(135deg, #1A1118, #130E10)' }}>
           <h4 style={{ margin: '0 0 8px 0', color: '#fff' }}>Consistency Report</h4>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5' }}>
-            You've been most consistent with <strong>Morning Meditation</strong> this week. 
-            Your focus on stress relief is showing results! 
+            Your average garden health is <strong>{avgHealth}%</strong>. 
+            Keep tending to your habits to see them bloom!
           </p>
           <div style={{ marginTop: '16px', height: '100px', display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
-            {[40, 60, 45, 80, 70, 90, 85].map((v, i) => (
-              <div key={i} style={{ flex: 1, height: `${v}%`, background: 'var(--amber)', borderRadius: '4px 4px 0 0' }}></div>
+            {habits.slice(0, 7).map((h, i) => (
+              <div key={i} style={{ flex: 1, height: `${h.health}%`, background: 'var(--amber)', borderRadius: '4px 4px 0 0' }}></div>
             ))}
+            {habits.length === 0 && <div style={{ color: 'rgba(255,255,255,0.3)', width: '100%', textAlign: 'center', fontSize: '12px' }}>No data yet</div>}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>
-            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-          </div>
-        </div>
-        
-        <div className="card" style={{ marginTop: '12px' }}>
-          <h4 style={{ margin: '0 0 8px 0' }}>Personality Shift</h4>
-          <p style={{ fontSize: '13px', color: 'var(--t2)' }}>
-            Your habit notes suggest a shift towards <strong>Productivity Focus</strong>. 
-            Keep it up to unlock new garden elements!
-          </p>
         </div>
       </div>
 
-      <button className="btn btn-secondary" style={{ marginTop: '24px', color: '#FF6B8A' }} onClick={handleLogout}>
-        Log Out
+      <button className="btn btn-secondary" style={{ marginTop: '24px', color: '#FF6B8A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={handleLogout}>
+        <LogOut size={18} /> Log Out
       </button>
 
       {showVacationModal && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
-          <div className="card" style={{ width: '100%', marginBottom: 0 }}>
+          <div className="card" style={{ width: '100%', maxWidth: '400px', marginBottom: 0 }}>
             <h3>Enable Vacation Mode 🌴</h3>
             <p style={{ fontSize: '12px', color: 'var(--t2)', marginBottom: '16px' }}>Pause your streaks without losing them. Why are you taking a break?</p>
             <input className="inp" placeholder="e.g. Family trip to Hawaii" value={vacationReason} onChange={e => setVacationReason(e.target.value)} />

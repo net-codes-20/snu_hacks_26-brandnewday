@@ -58,7 +58,11 @@ const Tribe: React.FC = () => {
     </div>
   );
 
-  if (!user?.joinedTribeId) {
+  if (!currentTribe && user?.joinedTribeId) {
+    return <div className="tribe-screen" style={{ padding: '24px' }}>Loading tribe data...</div>;
+  }
+
+  if (!user?.joinedTribeId || !currentTribe) {
     return (
       <div className="tribe-screen" style={{ padding: '24px' }}>
         <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Join a Tribe 🐝</h2>

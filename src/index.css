@@ -5,13 +5,16 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
-  min-height: 100vh;
-  background-color: #E2E8F0;
+  background-color: #F4F7FE; /* Using var(--bg) hex directly for safety */
+  color: #2D3748; /* Using var(--t1) hex */
 }
 
 #root {
   width: 100%;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
 }

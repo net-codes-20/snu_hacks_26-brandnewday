@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHabits } from '../../context/HabitContext';
+import { ARCHETYPES } from '../../constants/archetypes';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -7,64 +8,183 @@ interface OnboardingProps {
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const { completeOnboarding } = useHabits();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); // 0: Name/Alias, 1: Age/Gender, 2: Quiz
+  const [quizStep, setQuizStep] = useState(0);
   const [data, setData] = useState({
+    realName: '',
+    alias: '',
     age: '',
     gender: '',
-    motivation: '',
-    description: '',
   });
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+
+  const getQuizQuestions = (age: number) => {
+    const isYouth = age < 22;
+    const isSenior = age > 55;
+
+    return [
+      {
+        id: 1,
+        question: isYouth 
+          ? "When you miss a study session or habit, how do you feel?" 
+          : isSenior 
+            ? "When you break your daily wellness routine, how do you feel?"
+            : "When you miss a work-related or personal habit, how do you feel?",
+        options: [
+          { label: "It's a major setback, I hate breaking the chain.", value: "guardian" },
+          { label: "I don't mind, I'll just start over tomorrow.", value: "optimist" },
+          { label: "I analyze why I failed so I can fix my system.", value: "architect" },
+          { label: "I feel like I've lost a battle.", value: "warrior" }
+        ]
+      },
+      {
+        id: 2,
+        question: isYouth
+          ? "What motivates your growth most?"
+          : "What motivates your daily consistency most?",
+        options: [
+          { label: "Seeing the big end-goal and vision.", value: "visionary" },
+          { label: "Showing up for my friends and tribe.", value: "caregiver" },
+          { label: "Mastering a skill and seeing the metrics.", value: "warrior" },
+          { label: "The beauty and quality of my work.", value: "artisan" }
+        ]
+      },
+      {
+        id: 3,
+        question: "How do you prefer your progress timeline?",
+        options: [
+          { label: "Steady, slow, and reliable pace.", value: "anchor" },
+          { label: "Short, high-intensity bursts.", value: "spark" },
+          { label: "Deep, mindful sessions regardless of time.", value: "sage" },
+          { label: "Constantly changing and trying new things.", value: "explorer" }
+        ]
+      },
+      {
+        id: 4,
+        question: isYouth
+          ? "What's your primary academic or life goal?"
+          : "What's your primary life or career goal?",
+        options: [
+          { label: "Radical transformation of my current path.", value: "alchemist" },
+          { label: "Exploring new horizons and experiences.", value: "explorer" },
+          { label: "Building a rock-solid foundation for my life.", value: "anchor" },
+          { label: "Deep spiritual or intellectual growth.", value: "sage" }
+        ]
+      },
+      {
+        id: 5,
+        question: isYouth
+          ? "How does your school/study routine look?"
+          : "How does your professional/daily routine look?",
+        options: [
+          { label: "Highly detailed and systematic.", value: "architect" },
+          { label: "Strict and disciplined.", value: "warrior" },
+          { label: "Creative and focused on quality.", value: "artisan" },
+          { label: "Flexible and focused on the 'vibe'.", value: "optimist" }
+        ]
+      }
+    ];
+  };
+
+  const currentQuestions = getQuizQuestions(parseInt(data.age) || 25);
 
   const handleNext = () => {
     if (step < 2) {
       setStep(step + 1);
     } else {
-      // Simulate AI analysis
-      const analysis = analyzePersonality(data);
-      const tempUser = JSON.parse(localStorage.getItem('temp_user') || '{}');
-      
-      const userData = {
-        realName: tempUser.realName || 'User',
-        alias: tempUser.alias || 'Alias',
-        age: parseInt(data.age),
-        gender: data.gender,
-        personalityType: analysis.type,
-        personalityIcon: analysis.icon
-      };
-
-      completeOnboarding(userData);
-      onComplete();
+      if (quizStep < currentQuestions.length - 1) {
+        setQuizStep(quizStep + 1);
+      } else {
+        finishOnboarding();
+      }
     }
   };
 
-  const analyzePersonality = (d: any) => {
-    // Mock logic: if description has 'stress', it's 'Calm Seeker'
-    if (d.description.toLowerCase().includes('stress') || d.description.toLowerCase().includes('relax')) {
-      return { type: 'Calm Seeker', icon: '🧘' };
-    }
-    if (d.motivation === 'goals') {
-      return { type: 'High Achiever', icon: '🔥' };
-    }
-    return { type: 'Green Thumb', icon: '🌱' };
+  const finishOnboarding = () => {
+    const counts: Record<string, number> = {};
+    Object.values(quizAnswers).forEach(val => {
+      counts[val] = (counts[val] || 0) + 1;
+    });
+    
+    let winner = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'optimist');
+    const archetype = ARCHETYPES[winner];
+
+    completeOnboarding({
+      realName: data.realName,
+      alias: data.alias,
+      age: parseInt(data.age),
+      gender: data.gender,
+      personalityType: archetype.name,
+      personalityIcon: archetype.icon,
+      archetype: archetype
+    });
+    
+    onComplete();
   };
 
   return (
-    <div className="onboarding-screen" style={{ padding: '24px' }}>
+    <div className="onboarding-screen" style={{ padding: '24px', maxWidth: '500px', margin: '0 auto' }}>
       <div className="progress-bar" style={{ display: 'flex', gap: '4px', marginBottom: '32px' }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{ flex: 1, height: '4px', background: i <= step ? 'var(--amber)' : 'var(--bg3)', borderRadius: '2px' }} />
+        {[0, 1, 2, 3, 4, 5, 6].map(i => (
+          <div 
+            key={i} 
+            style={{ 
+              flex: 1, 
+              height: '4px', 
+              background: (step === 0 && i === 0) || (step === 1 && i <= 1) || (step === 2 && i <= quizStep + 2) ? 'var(--amber)' : 'var(--bg3)', 
+              borderRadius: '2px' 
+            }} 
+          />
         ))}
       </div>
 
       {step === 0 && (
         <div className="ob-slide">
-          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Tell us <span>about</span> you</h2>
-          <p style={{ color: 'var(--t2)', marginBottom: '24px' }}>This helps us customize your journey.</p>
+          <h2 style={{ fontSize: '28px', marginBottom: '8px', fontFamily: 'var(--font-head)' }}>Let's get <span>started</span></h2>
+          <p style={{ color: 'var(--t2)', marginBottom: '24px' }}>How should we address you?</p>
           
-          <label className="label" style={{ display: 'block', marginBottom: '8px' }}>AGE</label>
-          <input className="inp" type="number" placeholder="Enter age" value={data.age} onChange={e => setData({...data, age: e.target.value})} />
+          <label className="label" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '12px', color: 'var(--t3)' }}>REAL NAME</label>
+          <input 
+            className="inp" 
+            placeholder="e.g. John Doe" 
+            value={data.realName} 
+            onChange={e => setData({...data, realName: e.target.value})} 
+          />
           
-          <label className="label" style={{ display: 'block', marginBottom: '8px', marginTop: '16px' }}>GENDER</label>
+          <label className="label" style={{ display: 'block', marginBottom: '8px', marginTop: '16px', fontWeight: 'bold', fontSize: '12px', color: 'var(--t3)' }}>TRIBE ALIAS (Nickname)</label>
+          <input 
+            className="inp" 
+            placeholder="e.g. NightOwl" 
+            value={data.alias} 
+            onChange={e => setData({...data, alias: e.target.value})} 
+          />
+          
+          <button 
+            className="btn btn-primary" 
+            style={{ marginTop: '40px' }}
+            disabled={!data.realName || !data.alias}
+            onClick={handleNext}
+          >
+            Next Step →
+          </button>
+        </div>
+      )}
+
+      {step === 1 && (
+        <div className="ob-slide">
+          <h2 style={{ fontSize: '28px', marginBottom: '8px', fontFamily: 'var(--font-head)' }}>A bit <span>more</span> info</h2>
+          <p style={{ color: 'var(--t2)', marginBottom: '24px' }}>To personalize your HabiTribe experience.</p>
+          
+          <label className="label" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '12px', color: 'var(--t3)' }}>AGE</label>
+          <input 
+            className="inp" 
+            type="number" 
+            placeholder="Enter age" 
+            value={data.age} 
+            onChange={e => setData({...data, age: e.target.value})} 
+          />
+          
+          <label className="label" style={{ display: 'block', marginBottom: '8px', marginTop: '16px', fontWeight: 'bold', fontSize: '12px', color: 'var(--t3)' }}>GENDER</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['Male', 'Female', 'Other'].map(g => (
               <button 
@@ -75,47 +195,50 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
               >{g}</button>
             ))}
           </div>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div className="ob-slide">
-          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>What <span>drives</span> you?</h2>
-          <p style={{ color: 'var(--t2)', marginBottom: '24px' }}>Pick your primary motivation.</p>
           
-          {['goals', 'community', 'peace'].map(m => (
-            <button 
-              key={m} 
-              className={`btn ${data.motivation === m ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ marginBottom: '12px', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
-              onClick={() => setData({...data, motivation: m})}
-            >
-              <span>{m === 'goals' ? '🔥 High Achiever' : m === 'community' ? '🤝 Connector' : '🧘 Calm Seeker'}</span>
-              {data.motivation === m && <span>✓</span>}
-            </button>
-          ))}
+          <button 
+            className="btn btn-primary" 
+            style={{ marginTop: '40px' }}
+            disabled={!data.age || !data.gender}
+            onClick={handleNext}
+          >
+            Start Personalized Quiz →
+          </button>
         </div>
       )}
 
       {step === 2 && (
         <div className="ob-slide">
-          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Share your <span>vision</span></h2>
-          <p style={{ color: 'var(--t2)', marginBottom: '24px' }}>Describe what you want to achieve in a few sentences.</p>
-          <textarea 
-            className="inp" 
-            style={{ height: '120px', resize: 'none' }} 
-            placeholder="e.g. I want to build a consistent meditation habit to handle work stress..."
-            value={data.description}
-            onChange={e => setData({...data, description: e.target.value})}
-          />
+          <p style={{ color: 'var(--amber)', fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}>
+            QUESTION {quizStep + 1} OF 5
+          </p>
+          <h2 style={{ fontSize: '24px', marginBottom: '24px', fontFamily: 'var(--font-head)' }}>
+            {currentQuestions[quizStep].question}
+          </h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {currentQuestions[quizStep].options.map((opt, idx) => (
+              <button 
+                key={idx} 
+                className={`btn ${quizAnswers[quizStep] === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ textAlign: 'left', padding: '16px' }}
+                onClick={() => setQuizAnswers({...quizAnswers, [quizStep]: opt.value})}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            className="btn btn-primary" 
+            style={{ marginTop: '40px' }}
+            disabled={!quizAnswers[quizStep]}
+            onClick={handleNext}
+          >
+            {quizStep === 4 ? 'Discover My Archetype 🌱' : 'Next Question →'}
+          </button>
         </div>
       )}
-
-      <div style={{ marginTop: '40px' }}>
-        <button className="btn btn-primary" onClick={handleNext}>
-          {step === 2 ? 'Analyze & Bloom 🌱' : 'Next Step →'}
-        </button>
-      </div>
     </div>
   );
 };
